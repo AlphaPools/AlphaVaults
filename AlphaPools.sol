@@ -864,11 +864,9 @@ contract NBUNIERC20 is Context, INBUNIERC20, Ownable {
 
         _beforeTokenTransfer(sender, recipient, amount);
 
-        _balances[sender] = _balances[sender].sub(
-            amount,
-            "ERC20: transfer amount exceeds balance"
-        );
-
+        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+        _balances[recipient] = _balances[recipient].add(amount);
+        emit Transfer(sender, recipient, amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
