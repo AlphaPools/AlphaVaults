@@ -395,13 +395,6 @@ library Address {
     }
 }
 
-interface ITransferHandler {
-    function calculateAmountsAfterFee(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external  returns (uint256 transferToAmount, uint256 transferToFeeBearerAmount);
-}
 
 interface IAlphaVaults {
     function addPendingRewards(uint _amount) external;
@@ -845,24 +838,7 @@ contract NBUNIERC20 is Context, INBUNIERC20, Ownable {
         );
         return true;
     }
-
-    function setShouldTransferChecker(address _transferCheckerAddress)
-        public
-        onlyOwner
-    {
-        transferCheckerAddress = _transferCheckerAddress;
-    }
-
-    address public transferCheckerAddress;
-
-    function setFeeDistributor(address _feeDistributor)
-        public
-        onlyOwner
-    {
-        feeDistributor = _feeDistributor;
-    }
-
-    address public feeDistributor;
+    
 
     /**
      * @dev Moves tokens `amount` from `sender` to `recipient`.
@@ -893,21 +869,6 @@ contract NBUNIERC20 is Context, INBUNIERC20, Ownable {
             "ERC20: transfer amount exceeds balance"
         );
 
-        (uint256 transferToAmount, uint256 transferToFeeDistributorAmount) = ITransferHandler(transferCheckerAddress).calculateAmountsAfterFee(sender, recipient, amount);
-
-        // Addressing a broken checker contract
-        require(transferToAmount.add(transferToFeeDistributorAmount) == amount, "Math broke, does gravity still work?");
-
-        _balances[recipient] = _balances[recipient].add(transferToAmount);
-        emit Transfer(sender, recipient, transferToAmount);
-
-        if(transferToFeeDistributorAmount > 0 && feeDistributor != address(0)){
-            _balances[feeDistributor] = _balances[feeDistributor].add(transferToFeeDistributorAmount);
-            emit Transfer(sender, feeDistributor, transferToFeeDistributorAmount);
-            if(feeDistributor != address(0)){
-                IAlphaVaults(feeDistributor).addPendingRewards(transferToFeeDistributorAmount);
-            }
-        }
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
